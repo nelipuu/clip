@@ -1,0 +1,14 @@
+{
+  "name": "@lib/clip",
+  "version": "0.0.1",
+  "description": "Complex vs convex polygon clipping",
+  "author": "Juha Järvi",
+  "license": "MIT",
+  "scripts": {
+    "start": "vite"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.2"
+  }
+}
