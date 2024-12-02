@@ -45,7 +45,7 @@ Let's call the convex polygon a viewport, because the initial purpose is to extr
 - Optionally remove pairs of generated edges and existing edges connecting the exact same merged intersection points, if the viewport is a polygon and not for example a circle.
 
 - Finally build the result polygon. Start from some arbitrary intersection point A and follow a half edge inside the viewport,
-  along the convex polygon border to another half edge leading to an intersection point B. Mark the passed half edges as visited.
+  along the complex polygon border to another half edge leading to an intersection point B. Mark the passed half edges as visited.
 
 - Move to the next unvisited half edge in the sorted list around point B and repeat. If a point is reached with no more unvisited half edges (it should be the initial point A),
   then one output polygon ring is ready. Note that if a half edge is part of a generated edge representing a connection along a curved viewport edge, the connecting edge is a curve.
@@ -53,3 +53,11 @@ Let's call the convex polygon a viewport, because the initial purpose is to extr
 - If other intersection points with unvisited half edges remain, choose an arbitrary one as the new point A and start a new output polygon ring.
 
 - When no intersection points with unvisited half edges remain, the algorithm is ready.
+
+## References
+
+All these have PDFs linked.
+
+- [The point in polygon problem for arbitrary polygons](https://www.sciencedirect.com/science/article/pii/S0925772101000128). K. Hormann, A. Agathos. Computational Geometry 20(3):131-144, November 2001.
+- [Efficient Clipping of Arbitrary Polygons](https://www.inf.usi.ch/hormann/papers/Greiner.1998.ECO.pdf). G. Greiner, K. Hormann. ACM Transactions on Graphics 17(2):71-83, April 1998.
+- [Adaptive Precision Floating-Point Arithmetic and Fast Robust Geometric Predicates](https://link.springer.com/article/10.1007/PL00009321). J.R. Shewchuk. Discrete & Computational Geometry 18(3):305–363, October 1997.
