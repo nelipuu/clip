@@ -1,0 +1,38 @@
+<!DOCTYPE html><html><head> <title>Complex vs convex clipping</title> <meta charset="utf-8"> <meta name="viewport" content="width=device-width,initial-scale=1"> </head><body> <script>!function(){"use strict";const[t,n]=function(){let t,n=!0,o=1,e=1,c=1;do{t=c,e*=.5,n&&(o*=2),n=!n,c=1+e}while(1!=c&&c!=t);return[o+1,e]}(),o=(16*n+3)*n,e=(12*n+2)*n;function c(n,o,e){
+const c=n*t,s=c-(c-n),f=n-s,r=o*t,i=r-(r-o),l=o-i;return f*l-(e-s*i-f*i-s*l)}function s(t,n,o){const e=o-t;return t-(o-e)+(n-e)}function f(t,n,o,e,c){const f=n+e,r=t+f,i=s(t,f,r),l=o+i
+;return c[0]=s(n,e,f),c[1]=s(o,i,l),c[2]=s(r,l,r+l),c[3]=r+l,c}function r(t,n,o,e,c){n[t]=1/0,e[o]=1/0;let f=n[0],r=e[0],i=0>f?-f:f,l=0>r?-r:r,u=1,a=1,d=0,x=f;l>i?(f=n[u++],i=0>f?-f:f):(x=r,r=e[a++],
+l=0>r?-r:r);let b=t+o;for(;--b;){const t=x;let o=f;l>i?(f=n[u++],i=0>f?-f:f):(o=r,r=e[a++],l=0>r?-r:r),x+=o;const b=s(t,o,x);b&&(c[d++]=b)}return x&&(c[d++]=x),d}const i=[],l=[],u=[],a=[]
+;function d(t,n,o,e,s){const r=t*e,i=n*o;return f(r,c(t,e,r),-i,-c(n,o,i),s)}function x(t,n,x,b,h,g,v,y){const k=(x-t)*(y-g),M=(b-n)*(v-h);let p=k-M;if(0>=k*M)return p;let w=k+M;0>w&&(w=-w);let L=w*o
+;if(p>=L||-p>=L)return p;const m=f(k,c(x-t,y-g,k),-M,-c(b-n,v-h,M),i);if(p=m[0]+m[1],p+=m[2],p+=m[3],L=w*e,!(L>p&&L>-p&&(s(x,-t,x-t)||s(b,-n,b-n)||s(v,-h,v-h)||s(y,-g,y-g))))return p
+;const I=function(t,n,o,e,c,s,f,x,b){d(o,o,s,x,i),d(t,t,x,s,l);const h=r(4,i,4,l,u);d(e,e,f,c,i),d(n,n,c,f,l);const g=r(4,i,4,l,a);return r(h,u,g,a,b)}(t,n,x,b,h,g,v,y,i);return I&&i[I-1]}
+function b(t,n){const o=+(-t>n);return(+(n>t)^o?t/n:t&&2-n/t)-(o<<2)+((o&+(t>=0))<<3)}function h(t,n,o){return(3*+(n.x>t.x)^+(n.y>t.y))-(3*+(o.x>t.x)^+(o.y>t.y))||x(t.x,t.y,n.x,n.y,t.x,t.y,o.x,o.y)}
+function g(t,n,o,e,c){const s=n.length;let f=-1,r=n[f+s],i=2;const l=r.t,u=l.length;let a=-1,d=l[u-1],b=l[0],h=0;for(r.o>r.i||(f=0,r=n[f],i=0);;){switch(i){case 0:if(++a,a==r.o){i=1;const t=r.l
+;b=t.group||t}else b=l[a];break;case 1:if(a==r.i){i=3;const t=r.u;b=t.group||t}else i=2,b=l[a];break;case 2:if(++a,a==r.i){i=3;const t=r.u;b=t.group||t}else b=l[a];break;case 3:++f<s?(r=n[f],i=0):i=4,
+b=l[a];break;default:b=l[++a]}if(a>=u)break;const g=t.x,v=t.y,y=d.x-g||-o,k=b.x-g||-o;if(0>(d.y-v||-e)!=0>(b.y-v||-e)&&(y>=0||k>0))if(y>=0&&k>0)h+=b.y>d.y?1:-1;else{
+const n=x(g,v,d.x,d.y,g,v,b.x,b.y)||-x(b.x,b.y,d.x,d.y,c.y,-c.x,t.y,-t.x);n&&n>0==b.y>d.y&&(h+=b.y>d.y?1:-1)}d=b}return h}function v(t){const n=t.length;let o=n-1;for(let e=0;n>e;o=e++)t[o].next=t[e],
+t[e].h=t[o]}const y=[];let k=1;function M(){return k=2480367069*k>>>0,k}"object"==typeof window&&function(t){let n=[];for(let t=0;100>t;++t){const t=M()/65536/64+128,o=M()/65536/64+128;n.push({x:t,y:o
+})}let o=t.createElement("canvas");o.width=1280,o.height=1280,o.style.position="absolute",t.body.appendChild(o);let e=o.getContext("2d");e.fillStyle="#0002",e.lineWidth=1,e.strokeStyle="#0004",
+e.beginPath(),function(t,n){for(let o=0;n.length>o;++o){const{x:e,y:c}=n[o];o?t.lineTo(e,c):t.moveTo(e,c)}}(e,n),e.closePath(),e.fill("evenodd"),e.stroke(),o=t.createElement("canvas"),o.width=1280,
+o.height=1280,o.style.position="absolute",t.body.appendChild(o),e=o.getContext("2d");const c=o.getBoundingClientRect();o.addEventListener("mousemove",(t=>{const s=t.offsetX-c.left,f=t.offsetY-c.top
+;e.clearRect(0,0,o.width,o.height),e.fillStyle="#fff",e.lineWidth=1,e.strokeStyle="#0c08",e.beginPath(),e.arc(s,f,250,0,2*Math.PI),e.closePath(),e.fill("evenodd"),e.stroke(),e.fillStyle="#0604",
+e.lineWidth=2,e.strokeStyle="#060";const r={x:s,y:f},i=[];!function(t,n,o,e,c){let s=0;for(const n of o){const o=n.length;if(2>o)continue;const e=[];c.push(e);for(const t of n);let f=o-1,r=4,i=n[0]
+;const l={t:n,o:0,i:-1};let u=l;for(let c=0;o>f;f=c++){const o=i;i=n[f];const c=i.x-t.x,l=i.y-t.y;if(r=+(62500>c*c+l*l)+(r<<1)&11,3>r){const t=o.x-i.x,a=o.y-i.y,d=t*t+a*a,x=t*l-a*c,h=62500*d-x*x
+;if(h>=0){const o=t*c+a*l,x=Math.sqrt(h);let g,v;if(!(2&r)&&(v=(o-x)/d,1&r||v>=-1&&0>=v)){const o=v*t,r=v*a;u={t:n,o:f,i:-1},g={x:i.x-o,y:i.y-r,angle:b(l-r,c-o),l:u},u.l=g,e[s++]=u}if(!(1&r)){
+let n=(o+x)/d;if(2&r||g){2&r||(-1>n&&(n=-1),n>0&&(n=0));const o=n*t,e=n*a,s={x:i.x-o,y:i.y-e,angle:b(l-e,c-o),u:u};u.u=s,u.i=f}}}}}u==l?3&r&&(u.i=o,e[s++]=u):l.u&&(u.u=l.u,u.i=l.i,u.u.u=u)}
+}(r,0,[n],0,i),async function(t,n,o,e){console.log(n);const c=[],s=e[0];for(const{l:t,u:n}of s)t&&c.push(t),n&&c.push(n);const f=c.length;if(!f)return;c.sort(((t,n)=>t.angle-n.angle));const r=c[0]
+;let i=r,l=i.angle;for(let t=1;f>t;){const n=c[t++];.001>n.angle-l?(n.l&&(i.v||(i.v=i.l?[i]:[])).push(n),n.u&&(i.k||(i.k=i.u?[i]:[])).push(n),n.group=i):(l=n.angle,i=n)}
+if(i!=r&&.001>r.angle+8-i.angle){if(i.v){for(const t of i.v)t.group&&(t.group=r);r.v?[].push.apply(r.v,i.v):(r.l&&i.v.push(r),r.v=i.v,i.v=void 0)}else i.l&&(r.v?r.v.push(i):(r.v=[i],r.l&&r.v.push(r)))
+;if(i.k){for(const t of i.k)t.group&&(t.group=r);r.k?[].push.apply(r.k,i.k):(r.u&&i.k.push(r),r.k=i.k,i.k=void 0)}else i.u&&(r.k?r.k.push(i):(r.k=[i],r.u&&r.k.push(r)));i.group=r}const u=[],a=[];let d
+;for(const t of c){if(t.group)continue;const o=t.v||(t.l?(u[0]=t,u):y),e=t.k||(t.u?(a[0]=t,a):y);for(const t of o){const n=t.l,o=n.t;if(n.i==n.o){let o=n.u;o.group&&(o=o.group),t.M=o}else t.M=o[n.o]}
+for(const t of e){const n=t.u,o=n.t;if(n.i==n.o){let o=n.l;o.group&&(o=o.group),t.M=o}else{let e=n.i-1;0>e&&(e+=o.length),t.M=o[e]}}const c=o.concat(e);t.p=c.length;const s={x:t.x,y:t.y,angle:0,
+group:t,M:{x:2*t.x-n.x,y:2*t.y-n.y}};c.push(s),c.sort(((n,o)=>h(t,n.M,o.M))),v(c),t.L=s,d=t}const x=y;let b=c[0],k=null;for(let t=1;c.length>t;++t)if(!c[t].group){k=g(b,s,n.y>b.y?-1:1,n.x>b.x?1:-1,n)
+;break}if(null===k)return c;k&=1;let M=d;for(const t of c){if(t.group)continue;const n=1&t.p;if(t.count=t.p+2-n,k){const o={t:x,l:M.L,u:t.L,o:-1,i:-1,m:!0},e=t.L.l;if(M.L.l=o,t.L.u=o,!n){t.L.l=void 0
+;const n={x:t.x,y:t.y,angle:0,l:e,group:t,h:t.L.h,next:t.L,M:t.L.M};n.h.next=n,n.next.h=n,t.L=n}}k^=n,M=t}let p=0;if(b=c[p++],!b)return c;for(t.beginPath(),t.moveTo(b.x,b.y);;){
+if(!b||0==(b.group||b).count||!b.group&&!b.count&&b.I){for(;(!b||b.I)&&c.length>p;)b=c[p++];if(b.I)break;t.moveTo(b.x,b.y)}else for(;b.I;)b=b.next;b.I=!0;let o=b.group||b;o.count&&--o.count
+;const e=b.l,s=b.u;if(e){const o=e.t;let c=e.o;for(;c!=e.i;){const n=o[c];t.lineTo(n.x,n.y),++c<o.length||(c=0)}if(e.m){const o=Math.atan2(b.y-n.y,b.x-n.x);b=e.u,
+t.arc(n.x,n.y,250,o,Math.atan2(b.y-n.y,b.x-n.x))}else b=e.u,t.lineTo(b.x,b.y)}else if(s){const o=s.t;let e=s.i;for(;e!=s.o;){0>--e&&(e=o.length-1);const n=o[e];t.lineTo(n.x,n.y)}if(s.m){
+const o=Math.atan2(b.y-n.y,b.x-n.x);b=s.l,t.arc(n.x,n.y,250,o,Math.atan2(b.y-n.y,b.x-n.x),!0)}else b=s.l,t.lineTo(b.x,b.y)}b.I=!0,o=b.group||b,o.count&&--o.count,
+b.next||b.group&&b.group.group&&console.log("IMPOSSIBLE!!!"),b=b.next}t.fill("evenodd"),t.stroke()}(e,r,0,i)}))}(globalThis.document)}();
+//# sourceMappingURL=index.ts.map
+</script> </body></html>
+
