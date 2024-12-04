@@ -9,7 +9,7 @@ function b(t,n){const o=+(-t>n);return(+(n>t)^o?t/n:t&&2-n/t)-(o<<2)+((o&+(t>=0)
 function g(t,n,o,e,c){const s=n.length;let f=-1,r=n[f+s],i=2;const l=r.t,u=l.length;let a=-1,d=l[u-1],b=l[0],h=0;for(r.o>r.i||(f=0,r=n[f],i=0);;){switch(i){case 0:if(++a,a==r.o){i=1;const t=r.l
 ;b=t.group||t}else b=l[a];break;case 1:if(a==r.i){i=3;const t=r.u;b=t.group||t}else i=2,b=l[a];break;case 2:if(++a,a==r.i){i=3;const t=r.u;b=t.group||t}else b=l[a];break;case 3:++f<s?(r=n[f],i=0):i=4,
 b=l[a];break;default:b=l[++a]}if(a>=u)break;const g=t.x,v=t.y,y=d.x-g||-o,k=b.x-g||-o;if(0>(d.y-v||-e)!=0>(b.y-v||-e)&&(y>=0||k>0))if(y>=0&&k>0)h+=b.y>d.y?1:-1;else{
-const n=x(g,v,d.x,d.y,g,v,b.x,b.y)||-x(b.x,b.y,d.x,d.y,c.y,-c.x,t.y,-t.x);n&&n>0==b.y>d.y&&(h+=b.y>d.y?1:-1)}d=b}return h}function v(t){const n=t.length;let o=n-1;for(let e=0;n>e;o=e++)t[o].next=t[e],
+const n=x(g,v,d.x,d.y,g,v,b.x,b.y)||x(b.x,b.y,d.x,d.y,-c.y,c.x,-t.y,t.x);n&&n>0==b.y>d.y&&(h+=b.y>d.y?1:-1)}d=b}return h}function v(t){const n=t.length;let o=n-1;for(let e=0;n>e;o=e++)t[o].next=t[e],
 t[e].h=t[o]}const y=[];let k=1;function M(){return k=2480367069*k>>>0,k}"object"==typeof window&&function(t){let n=[];for(let t=0;100>t;++t){const t=M()/65536/64+128,o=M()/65536/64+128;n.push({x:t,y:o
 })}let o=t.createElement("canvas");o.width=1280,o.height=1280,o.style.position="absolute",t.body.appendChild(o);let e=o.getContext("2d");e.fillStyle="#0002",e.lineWidth=1,e.strokeStyle="#0004",
 e.beginPath(),function(t,n){for(let o=0;n.length>o;++o){const{x:e,y:c}=n[o];o?t.lineTo(e,c):t.moveTo(e,c)}}(e,n),e.closePath(),e.fill("evenodd"),e.stroke(),o=t.createElement("canvas"),o.width=1280,
