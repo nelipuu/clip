@@ -94,4 +94,4 @@ function main(doc: Document) {
 	});
 }
 
-main(document);
+if(typeof window == 'object') main(globalThis.document);

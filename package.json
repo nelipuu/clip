@@ -5,10 +5,13 @@
   "author": "Juha Järvi",
   "license": "MIT",
   "scripts": {
-    "start": "vite"
+    "build": "node --enable-source-maps run build/minify-html.ts index.html > min.html",
+    "start": "node --enable-source-maps run build/serve.ts"
   },
   "devDependencies": {
-    "typescript": "^5.7.2",
-    "vite": "^6.0.2"
+    "@types/node": "^22.10.1",
+    "rollup": "^4.28.0",
+    "terser": "^5.36.0",
+    "typescript": "^5.7.2"
   }
 }

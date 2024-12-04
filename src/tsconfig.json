@@ -1,0 +1,10 @@
+{
+	"compilerOptions": {
+		"esModuleInterop": true,
+		"strict": true
+	},
+	"files": [
+		"../build/dev.d.ts",
+		"index.ts"
+	]
+}

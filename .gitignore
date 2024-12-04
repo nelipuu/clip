@@ -1,0 +1,8 @@
+node_modules/
+min.html
+*.map
+*-lock.json
+*.lock
+*.log.*
+*.log
+*.tgz
