@@ -81,7 +81,7 @@ export function twoSumLo(a: f64, b: f64, sumHi: f64): f64 {
   * @param sum Storage for resulting floating point expansion,
   * least significant limb first. Four elements will be written, some may be zero. */
 
-export function twoTwoSum<Type = f64[] | Float64Array>(aHi: f64, aLo: f64, bHi: f64, bLo: f64, sum: Type): Type {
+export function twoTwoSum<Type extends f64[] | Float64Array>(aHi: f64, aLo: f64, bHi: f64, bLo: f64, sum: Type): Type {
 	const lolo = aLo + bLo;
 	const hi1 = aHi + lolo;
 	const hi1lo = twoSumLo(aHi, lolo, hi1);
@@ -154,7 +154,7 @@ const sum2: f64[] = []; // new Float64Array(5);
 const sum3: f64[] = []; // new Float64Array(9);
 const sum4: f64[] = []; // new Float64Array(9);
 
-export function crossProduct<Type = f64[] | Float64Array>(ax: f64, ay: f64, bx: f64, by: f64, result: Type): Type {
+export function crossProduct<Type extends f64[] | Float64Array>(ax: f64, ay: f64, bx: f64, by: f64, result: Type): Type {
 	const axbyHi = ax * by;
 	const aybxHi = ay * bx;
 	const axbyLo = twoProductLo(ax, by, axbyHi);

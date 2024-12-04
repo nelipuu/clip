@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "build": "node --enable-source-maps run build/minify-html.ts index.html > min.html",
-    "start": "node --enable-source-maps run build/serve.ts"
+    "start": "node --enable-source-maps run build/serve.ts",
+    "test": "node --enable-source-maps run src/test.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",

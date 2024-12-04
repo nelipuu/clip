@@ -90,7 +90,7 @@ export function inPolygon(r: XY, parts: PolylinePart[], ex: number, ey: number, 
 				const side = (
 					perpDotSign(rx, ry, p.x, p.y, rx, ry, p1.x, p1.y) ||
 					// Compare with tangent by flipping x/y in direction to center.
-					-perpDotSign(p1.x, p1.y, p.x, p.y, center.y, -center.x, r.y, -r.x)
+					perpDotSign(p1.x, p1.y, p.x, p.y, -center.y, center.x, -r.y, r.x)
 				);
 
 				if(side && side > 0 == (p1.y > p.y)) winding += p1.y > p.y ? 1 : -1;
