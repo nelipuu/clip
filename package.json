@@ -5,8 +5,10 @@
   "author": "Juha Järvi",
   "license": "MIT",
   "scripts": {
-    "build": "node --enable-source-maps run build/minify-html.ts index.html > min.html",
+    "install": "cd dist || git worktree add -f dist gh-pages",
+    "build": "node --enable-source-maps run build/minify-html.ts index.html > dist/index.html",
     "start": "node --enable-source-maps run build/serve.ts",
+    "deploy": "npm run build && cd dist && git add . && git commit -m WIP && git push",
     "test": "node --enable-source-maps run src/test.ts"
   },
   "devDependencies": {
