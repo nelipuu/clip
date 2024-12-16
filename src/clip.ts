@@ -15,10 +15,8 @@ interface ClipXY extends XY {
 	kind: ClipKind;
 	part?: PolylinePart;
 
-	/** Merged intersections (including this one) that enter at this point. */
-	enterList?: ClipXY[];
-	/** Merged intersections (including this one) that exit at this point. */
-	exitList?: ClipXY[];
+	/** Merged intersections (including this one) at this point. */
+	overlaps?: ClipXY[];
 
 	prev?: ClipXY;
 	next?: ClipXY;
@@ -234,11 +232,7 @@ export async function linkIntersections(
 		const pt = intersections[pos++];
 
 		if(pt.angle - angle < ANGLE_EPSILON) {
-			if(pt.kind == ClipKind.enter) {
-				(group.enterList || (group.enterList = (group.kind == ClipKind.enter ? [group] : []))).push(pt);
-			} else {
-				(group.exitList || (group.exitList = (group.kind == ClipKind.exit ? [group] : []))).push(pt);
-			}
+			(group.overlaps || (group.overlaps = [group])).push(pt);
 			pt.group = group;
 		} else {
 			angle = pt.angle;
@@ -249,85 +243,45 @@ export async function linkIntersections(
 	if(group != first && first.angle + 8 - group.angle < ANGLE_EPSILON) {
 		// Merge last group into first point if it's close. Note that it may be a group already.
 
-		if(group.enterList) {
-			for(const member of group.enterList) {
+		if(group.overlaps) {
+			for(const member of group.overlaps) {
 				if(member.group) member.group = first;
 			}
 
-			if(first.enterList) {
-				[].push.apply(first.enterList, group.enterList);
+			if(first.overlaps) {
+				first.overlaps.push.apply(first.overlaps, group.overlaps);
 			} else {
-				if(first.kind == ClipKind.enter) group.enterList.push(first);
-				first.enterList = group.enterList;
-				group.enterList = void 0;
+				group.overlaps.push(first);
+				first.overlaps = group.overlaps;
+				group.overlaps = void 0;
 			}
-		} else if(group.kind == ClipKind.enter) {
-			if(first.enterList) {
-				first.enterList.push(group);
-			} else {
-				first.enterList = [group];
-				if(first.kind == ClipKind.enter) first.enterList.push(first);
-			}
-		}
-
-		if(group.exitList) {
-			for(const member of group.exitList) {
-				if(member.group) member.group = first;
-			}
-
-			if(first.exitList) {
-				[].push.apply(first.exitList, group.exitList);
-			} else {
-				if(first.kind == ClipKind.exit) group.exitList.push(first);
-				first.exitList = group.exitList;
-				group.exitList = void 0;
-			}
-		} else if(group.kind == ClipKind.exit) {
-			if(first.exitList) {
-				first.exitList.push(group);
-			} else {
-				first.exitList = [group];
-				if(first.kind == ClipKind.exit) first.exitList.push(first);
-			}
+		} else {
+			(first.overlaps || (first.overlaps = [first])).push(group);
 		}
 
 		group.group = first;
 	}
 
-	const singleEnter: ClipXY[] = [];
-	const singleExit: ClipXY[] = [];
+	const singleMember: ClipXY[] = [];
 	let lastGroup: ClipXY;
 
 	// Sort intersecting segments around points by angle, using post-merge coordinates.
 	for(const pt of intersections) {
 		if(pt.group) continue;
 
-		const enterList = pt.enterList || (pt.kind == ClipKind.enter ? (singleEnter[0] = pt, singleEnter) : empty);
-		const exitList = pt.exitList || (pt.kind == ClipKind.exit ? (singleExit[0] = pt, singleExit) : empty);
+		const overlaps = pt.overlaps || (singleMember[0] = pt, singleMember);
 
-		for(const member of enterList) {
+		for(const member of overlaps) {
 			const part = member.part!;
 			const ring = part.ring;
 
 			if(part.afterLast == part.first) {
-				// The segment intersects the circle a second time before the next point.
-				let other = part.exit!;
+				// The segment intersects the circle a second time before / after the next point.
+				let other = member.kind == ClipKind.enter ? part.exit! : part.enter!;
 				if(other.group) other = other.group;
 				member.other = other;
-			} else {
+			} else if(member.kind == ClipKind.enter) {
 				member.other = ring[part.first];
-			}
-		}
-
-		for(const member of exitList) {
-			const part = member.part!;
-			const ring = part.ring;
-
-			if(part.afterLast == part.first) {
-				// The segment intersects the circle a second time after the previous point.
-				let other = part.enter!;
-				if(other.group) other = other.group;
-				member.other = other;
 			} else {
 				let last = part.afterLast - 1;
 				if(last < 0) last += ring.length;
@@ -335,8 +289,7 @@ export async function linkIntersections(
 			}
 		}
 
-		const segmentList = enterList.concat(exitList);
-		pt.parityCount = segmentList.length;
+		pt.parityCount = overlaps.length;
 
 		// Insert placeholder for circle edge, at angle of the circle normal pointing outward.
 		const outerEdge: ClipXY = {
@@ -352,11 +305,12 @@ export async function linkIntersections(
 			}
 		};
 
-		segmentList.push(outerEdge);
-		segmentList.sort((a, b) => compareAngles(pt!, a.other!, b.other!));
+		overlaps.push(outerEdge);
+		overlaps.sort((a, b) => compareAngles(pt!, a.other!, b.other!));
 
 		// Construct circular bidirectional linked list.
-		linkMembers(segmentList);
+		linkMembers(overlaps);
+		overlaps.pop();
 
 		pt.outerEdge = outerEdge;
 		lastGroup = pt;
