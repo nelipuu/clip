@@ -2,15 +2,18 @@ import type { XY } from './types';
 import { compareAngles, pseudoAtan2 } from './pseudoAtan2';
 import { inPolygon } from './inPolygon';
 
+const enum ClipKind {
+	enter,
+	exit,
+	edge
+}
+
 interface ClipXY extends XY {
 	/** Angle approximating atan2(this.y - center.y, this.x - center.x), for sorting */
 	angle: number;
 
-	// NOTE: These two shouldn't be set simultaneously.
-	/** Polyline part that enters at this point. */
-	enter?: PolylinePart;
-	/** Polyline part that exits at this point. */
-	exit?: PolylinePart;
+	kind: ClipKind;
+	part?: PolylinePart;
 
 	/** Merged intersections (including this one) that enter at this point. */
 	enterList?: ClipXY[];
@@ -74,12 +77,6 @@ export function intersectCirclePolyline(
 		const parts: PolylinePart[] = [];
 		allParts.push(parts);
 
-		for(const pt of ring) {
-			const cx = pt.x - center.x;
-			const cy = pt.y - center.y;
-			const sqDist = cx * cx + cy * cy;
-		}
-
 		let pos = closed ? len - 1 : 0;
 		/** Two lowest bits signal whether two latest points were inside the circle.
 		  * Initial special value 4 means two points haven't been processed yet. */
@@ -133,10 +130,10 @@ export function intersectCirclePolyline(
 								x: pt.x - x,
 								y: pt.y - y,
 								angle: pseudoAtan2(cy - y, cx - x),
-								enter: part
+								kind: ClipKind.enter,
+								part
 							};
 
-							if(enter.x < 120) debugger;
 							part.enter = enter;
 							parts[partCount++] = part;
 						}
@@ -163,10 +160,10 @@ export function intersectCirclePolyline(
 								x: pt.x - x,
 								y: pt.y - y,
 								angle: pseudoAtan2(cy - y, cx - x),
-								exit: part
+								kind: ClipKind.exit,
+								part
 							};
 
-							if(exit.x < 120) debugger;
 							part.exit = exit;
 							part.afterLast = pos;
 							if(!closed && part == firstPart) parts[partCount++] = part;
@@ -184,7 +181,7 @@ export function intersectCirclePolyline(
 		} else if(closed && firstPart.exit) {
 			part.exit = firstPart.exit;
 			part.afterLast = firstPart.afterLast;
-			part.exit.exit = part;
+			part.exit.part = part;
 		}
 	}
 
@@ -237,8 +234,11 @@ export async function linkIntersections(
 		const pt = intersections[pos++];
 
 		if(pt.angle - angle < ANGLE_EPSILON) {
-			if(pt.enter) (group.enterList || (group.enterList = (group.enter ? [group] : []))).push(pt);
-			if(pt.exit) (group.exitList || (group.exitList = (group.exit ? [group] : []))).push(pt);
+			if(pt.kind == ClipKind.enter) {
+				(group.enterList || (group.enterList = (group.kind == ClipKind.enter ? [group] : []))).push(pt);
+			} else {
+				(group.exitList || (group.exitList = (group.kind == ClipKind.exit ? [group] : []))).push(pt);
+			}
 			pt.group = group;
 		} else {
 			angle = pt.angle;
@@ -257,16 +257,16 @@ export async function linkIntersections(
 			if(first.enterList) {
 				[].push.apply(first.enterList, group.enterList);
 			} else {
-				if(first.enter) group.enterList.push(first);
+				if(first.kind == ClipKind.enter) group.enterList.push(first);
 				first.enterList = group.enterList;
 				group.enterList = void 0;
 			}
-		} else if(group.enter) {
+		} else if(group.kind == ClipKind.enter) {
 			if(first.enterList) {
 				first.enterList.push(group);
 			} else {
 				first.enterList = [group];
-				if(first.enter) first.enterList.push(first);
+				if(first.kind == ClipKind.enter) first.enterList.push(first);
 			}
 		}
 
@@ -278,16 +278,16 @@ export async function linkIntersections(
 			if(first.exitList) {
 				[].push.apply(first.exitList, group.exitList);
 			} else {
-				if(first.exit) group.exitList.push(first);
+				if(first.kind == ClipKind.exit) group.exitList.push(first);
 				first.exitList = group.exitList;
 				group.exitList = void 0;
 			}
-		} else if(group.exit) {
+		} else if(group.kind == ClipKind.exit) {
 			if(first.exitList) {
 				first.exitList.push(group);
 			} else {
 				first.exitList = [group];
-				if(first.exit) first.exitList.push(first);
+				if(first.kind == ClipKind.exit) first.exitList.push(first);
 			}
 		}
 
@@ -302,11 +302,11 @@ export async function linkIntersections(
 	for(const pt of intersections) {
 		if(pt.group) continue;
 
-		const enterList = pt.enterList || (pt.enter ? (singleEnter[0] = pt, singleEnter) : empty);
-		const exitList = pt.exitList || (pt.exit ? (singleExit[0] = pt, singleExit) : empty);
+		const enterList = pt.enterList || (pt.kind == ClipKind.enter ? (singleEnter[0] = pt, singleEnter) : empty);
+		const exitList = pt.exitList || (pt.kind == ClipKind.exit ? (singleExit[0] = pt, singleExit) : empty);
 
 		for(const member of enterList) {
-			const part = member.enter!;
+			const part = member.part!;
 			const ring = part.ring;
 
 			if(part.afterLast == part.first) {
@@ -320,7 +320,7 @@ export async function linkIntersections(
 		}
 
 		for(const member of exitList) {
-			const part = member.exit!;
+			const part = member.part!;
 			const ring = part.ring;
 
 			if(part.afterLast == part.first) {
@@ -345,6 +345,7 @@ export async function linkIntersections(
 			// Unused field at this point.
 			angle: 0,
 			group: pt,
+			kind: ClipKind.edge,
 			other: {
 				x: pt.x * 2 - center.x,
 				y: pt.y * 2 - center.y
@@ -397,22 +398,22 @@ export async function linkIntersections(
 
 			// This is set only when processing the last intersection,
 			// which was the prevGroup of the first intersection.
-			const enter = pt.outerEdge!.enter;
+			const enter = pt.outerEdge!.part;
 
-			prevGroup.outerEdge!.enter = part;
-			pt.outerEdge!.exit = part;
+			prevGroup.outerEdge!.part = part;
+			prevGroup.outerEdge!.kind = ClipKind.enter;
+			pt.outerEdge!.part = part;
+			pt.outerEdge!.kind = ClipKind.exit;
 
 			if(!parityChange) {
-				// Ensure this is unset.
-				pt.outerEdge!.enter = void 0;
-
 				// Only with an even number of intersections in a group, we need 2 edge segments.
 				const outerSecond: ClipXY = {
 					x: pt.x,
 					y: pt.y,
 					angle: 0,
-					enter,
+					part: enter,
 					group: pt,
+					kind: enter ? ClipKind.enter : ClipKind.edge,
 					prev: pt.outerEdge!.prev,
 					next: pt.outerEdge!,
 					other: pt.outerEdge!.other,
@@ -457,45 +458,44 @@ export async function linkIntersections(
 		let group = pt.group || pt;
 		if(group.count) --group.count;
 
-		const enter = pt.enter;
-		const exit = pt.exit;
+		if(pt.kind == ClipKind.enter) {
+			const part = pt.part!;
+			const ring = part.ring;
+			let pos = part.first;
 
-		if(enter) {
-			const ring = enter.ring;
-			let pos = enter.first;
-
-			while(pos != enter.afterLast) {
+			while(pos != part.afterLast) {
 				const pt = ring[pos];
 				gc.lineTo(pt.x, pt.y);
 
 				if(++pos >= ring.length) pos = 0;
 			}
 
-			if(enter.isArc) {
+			if(part.isArc) {
 				const start = Math.atan2(pt.y - center.y, pt.x - center.x);
-				pt = enter.exit!;
+				pt = part.exit!;
 				gc.arc(center.x, center.y, r, start, Math.atan2(pt.y - center.y, pt.x - center.x));
 			} else {
-				pt = enter.exit!;
+				pt = part.exit!;
 				gc.lineTo(pt.x, pt.y);
 			}
-		} else if(exit) {
-			const ring = exit.ring;
-			let pos = exit.afterLast;
+		} else if(pt.kind == ClipKind.exit) {
+			const part = pt.part!;
+			const ring = part.ring;
+			let pos = part.afterLast;
 
-			while(pos != exit.first) {
+			while(pos != part.first) {
 				if(--pos < 0) pos = ring.length - 1;
 
 				const pt = ring[pos];
 				gc.lineTo(pt.x, pt.y);
 			}
 
-			if(exit.isArc) {
+			if(part.isArc) {
 				const start = Math.atan2(pt.y - center.y, pt.x - center.x);
-				pt = exit.enter!;
+				pt = part.enter!;
 				gc.arc(center.x, center.y, r, start, Math.atan2(pt.y - center.y, pt.x - center.x), true);
 			} else {
-				pt = exit.enter!;
+				pt = part.enter!;
 				gc.lineTo(pt.x, pt.y);
 			}
 		}
@@ -504,10 +504,6 @@ export async function linkIntersections(
 		group = pt.group || pt;
 		if(group.count) --group.count;
 
-		if(!pt.next) {
-			if(pt.group && pt.group.group) console.log('IMPOSSIBLE!!!');
-			debugger;
-		}
 		pt = pt.next!;
 	}
 
