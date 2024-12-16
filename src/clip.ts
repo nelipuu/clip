@@ -2,17 +2,11 @@ import type { XY } from './types';
 import { compareAngles, pseudoAtan2 } from './pseudoAtan2';
 import { inPolygon } from './inPolygon';
 
-const enum ClipKind {
-	enter,
-	exit,
-	edge
-}
-
 interface ClipXY extends XY {
 	/** Angle approximating atan2(this.y - center.y, this.x - center.x), for sorting */
 	angle: number;
 
-	kind: ClipKind;
+	isEnter: boolean;
 	part?: PolylinePart;
 
 	/** Merged intersections (including this one) at this point. */
@@ -128,7 +122,7 @@ export function intersectCirclePolyline(
 								x: pt.x - x,
 								y: pt.y - y,
 								angle: pseudoAtan2(cy - y, cx - x),
-								kind: ClipKind.enter,
+								isEnter: true,
 								part
 							};
 
@@ -158,7 +152,7 @@ export function intersectCirclePolyline(
 								x: pt.x - x,
 								y: pt.y - y,
 								angle: pseudoAtan2(cy - y, cx - x),
-								kind: ClipKind.exit,
+								isEnter: false,
 								part
 							};
 
@@ -277,10 +271,10 @@ export async function linkIntersections(
 
 			if(part.afterLast == part.first) {
 				// The segment intersects the circle a second time before / after the next point.
-				let other = member.kind == ClipKind.enter ? part.exit! : part.enter!;
+				let other = member.isEnter ? part.exit! : part.enter!;
 				if(other.group) other = other.group;
 				member.other = other;
-			} else if(member.kind == ClipKind.enter) {
+			} else if(member.isEnter) {
 				member.other = ring[part.first];
 			} else {
 				let last = part.afterLast - 1;
@@ -298,7 +292,7 @@ export async function linkIntersections(
 			// Unused field at this point.
 			angle: 0,
 			group: pt,
-			kind: ClipKind.edge,
+			isEnter: true,
 			other: {
 				x: pt.x * 2 - center.x,
 				y: pt.y * 2 - center.y
@@ -310,6 +304,9 @@ export async function linkIntersections(
 
 		// Construct circular bidirectional linked list.
 		linkMembers(overlaps);
+
+		// Array contents are no longer needed.
+		// Restore length before previous push to re-use possible single item array.
 		overlaps.pop();
 
 		pt.outerEdge = outerEdge;
@@ -355,9 +352,9 @@ export async function linkIntersections(
 			const enter = pt.outerEdge!.part;
 
 			prevGroup.outerEdge!.part = part;
-			prevGroup.outerEdge!.kind = ClipKind.enter;
+			prevGroup.outerEdge!.isEnter = true;
 			pt.outerEdge!.part = part;
-			pt.outerEdge!.kind = ClipKind.exit;
+			pt.outerEdge!.isEnter = false;
 
 			if(!parityChange) {
 				// Only with an even number of intersections in a group, we need 2 edge segments.
@@ -367,7 +364,7 @@ export async function linkIntersections(
 					angle: 0,
 					part: enter,
 					group: pt,
-					kind: enter ? ClipKind.enter : ClipKind.edge,
+					isEnter: true,
 					prev: pt.outerEdge!.prev,
 					next: pt.outerEdge!,
 					other: pt.outerEdge!.other,
@@ -412,45 +409,46 @@ export async function linkIntersections(
 		let group = pt.group || pt;
 		if(group.count) --group.count;
 
-		if(pt.kind == ClipKind.enter) {
-			const part = pt.part!;
+		const part = pt.part;
+		if(part) {
 			const ring = part.ring;
-			let pos = part.first;
 
-			while(pos != part.afterLast) {
-				const pt = ring[pos];
-				gc.lineTo(pt.x, pt.y);
+			if(pt.isEnter) {
+				let pos = part.first;
 
-				if(++pos >= ring.length) pos = 0;
-			}
+				while(pos != part.afterLast) {
+					const pt = ring[pos];
+					gc.lineTo(pt.x, pt.y);
 
-			if(part.isArc) {
-				const start = Math.atan2(pt.y - center.y, pt.x - center.x);
-				pt = part.exit!;
-				gc.arc(center.x, center.y, r, start, Math.atan2(pt.y - center.y, pt.x - center.x));
+					if(++pos >= ring.length) pos = 0;
+				}
+
+				if(part.isArc) {
+					const start = Math.atan2(pt.y - center.y, pt.x - center.x);
+					pt = part.exit!;
+					gc.arc(center.x, center.y, r, start, Math.atan2(pt.y - center.y, pt.x - center.x));
+				} else {
+					pt = part.exit!;
+					gc.lineTo(pt.x, pt.y);
+				}
 			} else {
-				pt = part.exit!;
-				gc.lineTo(pt.x, pt.y);
-			}
-		} else if(pt.kind == ClipKind.exit) {
-			const part = pt.part!;
-			const ring = part.ring;
-			let pos = part.afterLast;
+				let pos = part.afterLast;
 
-			while(pos != part.first) {
-				if(--pos < 0) pos = ring.length - 1;
+				while(pos != part.first) {
+					if(--pos < 0) pos = ring.length - 1;
 
-				const pt = ring[pos];
-				gc.lineTo(pt.x, pt.y);
-			}
+					const pt = ring[pos];
+					gc.lineTo(pt.x, pt.y);
+				}
 
-			if(part.isArc) {
-				const start = Math.atan2(pt.y - center.y, pt.x - center.x);
-				pt = part.enter!;
-				gc.arc(center.x, center.y, r, start, Math.atan2(pt.y - center.y, pt.x - center.x), true);
-			} else {
-				pt = part.enter!;
-				gc.lineTo(pt.x, pt.y);
+				if(part.isArc) {
+					const start = Math.atan2(pt.y - center.y, pt.x - center.x);
+					pt = part.enter!;
+					gc.arc(center.x, center.y, r, start, Math.atan2(pt.y - center.y, pt.x - center.x), true);
+				} else {
+					pt = part.enter!;
+					gc.lineTo(pt.x, pt.y);
+				}
 			}
 		}
 
