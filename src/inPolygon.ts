@@ -1,5 +1,4 @@
-import type { XY } from './types';
-import type { PolylinePart } from './clip';
+import type { XY, PolylinePart } from './types';
 import { perpDotSign } from './orient';
 
 const enum PartState {
@@ -87,10 +86,14 @@ export function inPolygon(r: XY, parts: PolylinePart[], ex: number, ey: number, 
 			if(dx >= 0 && dx1 > 0) {
 				winding += p1.y > p.y ? 1 : -1;
 			} else {
+				// Check which side of polygon edge segment the point lies on.
+				// If it's on the segment, compare angle between segment and clipping shape
+				// tangent at the point, to know whether following along the clipping shape
+				// immediately leads inside or outside.
 				const side = (
 					perpDotSign(rx, ry, p.x, p.y, rx, ry, p1.x, p1.y) ||
 					// Compare with tangent by flipping x/y in direction to center.
-					perpDotSign(p1.x, p1.y, p.x, p.y, -center.y, center.x, -r.y, r.x)
+					perpDotSign(p1.x, p1.y, p.x, p.y, -center.y, center.x, -ry, rx)
 				);
 
 				if(side && side > 0 == (p1.y > p.y)) winding += p1.y > p.y ? 1 : -1;

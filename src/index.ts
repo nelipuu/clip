@@ -1,5 +1,6 @@
-import { XY } from './types';
-import { PolylinePart, intersectCirclePolyline, linkIntersections } from './clip';
+import { XY, PolylinePart } from './types';
+import { clipCircle } from './clipCircle';
+import { linkParts } from './linkParts';
 
 let seed = 1;
 
@@ -89,8 +90,8 @@ function main(doc: Document) {
 		const rings = [ring];
 		const parts: PolylinePart[][] = [];
 
-		intersectCirclePolyline(center, r, rings, true, parts);
-		linkIntersections(gc, center, r, parts);
+		clipCircle(center, r, rings, true, parts);
+		linkParts(gc, center, r, parts);
 	});
 }
 
